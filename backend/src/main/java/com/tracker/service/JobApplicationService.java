@@ -35,6 +35,16 @@ public class JobApplicationService {
                 .collect(Collectors.toList());
     }
 
+    public org.springframework.data.domain.Page<JobApplicationDto> search(
+            String userEmail,
+            com.tracker.model.ApplicationStatus status,
+            String company,
+            org.springframework.data.domain.Pageable pageable) {
+        Long userId = getUserIdByEmail(userEmail);
+        return applicationRepository.search(userId, status, company, pageable)
+                .map(this::toDto);
+    }
+
     public JobApplicationDto create(String userEmail, JobApplicationDto dto) {
         Long userId = getUserIdByEmail(userEmail);
 
@@ -54,8 +64,6 @@ public class JobApplicationService {
         JobApplication app = applicationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found"));
 
-        // Important check: make sure this application actually belongs to
-        // the logged-in user, so one user can't edit another user's data.
         if (!app.getUserId().equals(userId)) {
             throw new SecurityException("You do not have access to this application");
         }
@@ -79,6 +87,29 @@ public class JobApplicationService {
         }
 
         applicationRepository.delete(app);
+    }
+
+    public String exportAsCsv(String userEmail) {
+        Long userId = getUserIdByEmail(userEmail);
+        List<JobApplication> apps = applicationRepository.findByUserId(userId);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Company,Role,Status,Applied Date,Notes\n");
+        for (JobApplication app : apps) {
+            sb.append(csvEscape(app.getCompany())).append(",");
+            sb.append(csvEscape(app.getRole())).append(",");
+            sb.append(app.getStatus()).append(",");
+            sb.append(app.getAppliedDate() != null ? app.getAppliedDate() : "").append(",");
+            sb.append(csvEscape(app.getNotes())).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String csvEscape(String value) {
+        if (value == null)
+            return "";
+        String escaped = value.replace("\"", "\"\"");
+        return "\"" + escaped + "\"";
     }
 
     private JobApplicationDto toDto(JobApplication app) {

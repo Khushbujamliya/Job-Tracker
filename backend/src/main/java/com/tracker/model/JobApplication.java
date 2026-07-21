@@ -31,26 +31,75 @@ public class JobApplication {
     @Column(nullable = false)
     private Long userId;
 
-    public JobApplication() {}
+    // Tracks whether a follow-up reminder email has already been sent for this
+    // application, so the scheduled job doesn't email the user repeatedly.
+    @Column(nullable = false)
+    private boolean reminderSent = false;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public JobApplication() {
+    }
 
-    public String getCompany() { return company; }
-    public void setCompany(String company) { this.company = company; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public ApplicationStatus getStatus() { return status; }
-    public void setStatus(ApplicationStatus status) { this.status = status; }
+    public String getCompany() {
+        return company;
+    }
 
-    public LocalDate getAppliedDate() { return appliedDate; }
-    public void setAppliedDate(LocalDate appliedDate) { this.appliedDate = appliedDate; }
+    public void setCompany(String company) {
+        this.company = company;
+    }
 
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+    public String getRole() {
+        return role;
+    }
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public ApplicationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ApplicationStatus status) {
+        this.status = status;
+    }
+
+    public LocalDate getAppliedDate() {
+        return appliedDate;
+    }
+
+    public void setAppliedDate(LocalDate appliedDate) {
+        this.appliedDate = appliedDate;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public boolean isReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(boolean reminderSent) {
+        this.reminderSent = reminderSent;
+    }
 }
