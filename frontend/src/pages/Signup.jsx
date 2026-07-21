@@ -22,7 +22,18 @@ export default function Signup() {
       login(res.data)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed. Try a different email.')
+      console.log("Signup Error:", err);
+      console.log("Response:", err.response);
+
+      if (err.response) {
+        setError(
+          typeof err.response.data === "string"
+            ? err.response.data
+            : JSON.stringify(err.response.data)
+        );
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false)
     }
