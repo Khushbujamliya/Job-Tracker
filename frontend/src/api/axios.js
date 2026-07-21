@@ -1,16 +1,18 @@
-import axios from 'axios'
+import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-})
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+});
 
-// Attach the JWT token (if we have one) to every outgoing request automatically
+// Attach JWT token automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+  const token = localStorage.getItem("token");
 
-export default api
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+export default api;
