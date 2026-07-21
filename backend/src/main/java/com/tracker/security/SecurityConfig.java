@@ -51,14 +51,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // disabled because we're using stateless JWT auth, not cookies/sessions
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // signup/login are public
-                .anyRequest().authenticated()                 // everything else requires a valid JWT
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable()) // disabled because we're using stateless JWT auth, not cookies/sessions
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // signup/login are public
+                        .anyRequest().authenticated() // everything else requires a valid JWT
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -66,12 +66,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // Vite's default dev server port
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://job-tracker-red-beta.vercel.app"));
+
+        config.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"));
+
         config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }
