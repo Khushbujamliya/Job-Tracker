@@ -1,13 +1,29 @@
 # Job Application Tracker
 
-A full-stack app to track your job applications — built with Spring Boot + MySQL (backend) and React + Tailwind (frontend). JWT-based authentication.
+A full-stack app to track job applications — built with Spring Boot + MySQL (backend) and React + Tailwind (frontend). JWT-based authentication.
+
+🔗 **Live demo:** https://job-tracker-red-beta.vercel.app
+
+## Features
+- Sign up / log in with JWT auth (BCrypt-hashed passwords)
+- Add, edit, delete applications
+- Filter by status, search by company name
+- Pagination
+- Export all applications to CSV
+- Daily email reminders for applications sitting in "Applied" status too long
+- Status breakdown pie chart
+
+## Tech stack
+- **Backend:** Spring Boot 3, Spring Security, Spring Data JPA, MySQL, JWT
+- **Frontend:** React, Vite, Tailwind CSS, Recharts, Axios
+- **Deployment:** Railway (backend + MySQL), Vercel (frontend)
 
 ## Project structure
-```
+\```
 job-tracker/
 ├── backend/    Spring Boot REST API
 └── frontend/   React + Vite app
-```
+\```
 
 ## Prerequisites
 - Java 17+
@@ -16,47 +32,34 @@ job-tracker/
 - MySQL running locally
 
 ## Backend setup
-
-1. Open `backend/` in VS Code (install the "Extension Pack for Java" and "Spring Boot Extension Pack" if you haven't).
-2. Create a MySQL database (or let the app create it — see below).
-3. Edit `backend/src/main/resources/application.properties`:
-   - Set `spring.datasource.password` to your actual MySQL root password.
-   - `createDatabaseIfNotExist=true` in the URL means MySQL will auto-create the `job_tracker` database on first run — you don't need to create it manually.
-4. Run it:
-   - In VS Code: open `TrackerApplication.java` → click "Run" above the `main` method.
-   - Or from terminal: `cd backend && mvn spring-boot:run`
-5. Backend runs on **http://localhost:8080**
-
-Test it's working: `POST http://localhost:8080/api/auth/signup` with body:
-```json
-{ "name": "Test User", "email": "test@test.com", "password": "test123" }
-```
-(Use Postman or VS Code's "Thunder Client" extension for this.)
+1. Open `backend/` in VS Code (install "Extension Pack for Java" and "Spring Boot Extension Pack").
+2. Edit `backend/src/main/resources/application.properties` or set environment variables — see `.env.example` style below.
+3. Run: `cd backend && mvn spring-boot:run`
+4. Backend runs on **http://localhost:8080**
 
 ## Frontend setup
-
-1. Open a new terminal:
-   ```
-   cd frontend
-   npm install
-   npm run dev
-   ```
+1. `cd frontend && npm install && npm run dev`
 2. Frontend runs on **http://localhost:5173**
-3. Sign up, log in, and start adding applications.
+
+## Environment variables (for deployment)
+Backend (Railway): DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, CORS_ORIGIN, MAIL_USERNAME, MAIL_PASSWORD, REMINDER_DAYS
+
+Frontend (Vercel): VITE_API_URL=https://your-backend-url/api
 
 ## How auth works (for interview prep)
-1. On signup/login, the backend generates a signed JWT and sends it back.
-2. The frontend stores the token in `localStorage` and attaches it to every API request via an axios interceptor (`src/api/axios.js`).
-3. On the backend, `JwtAuthFilter` intercepts every request, validates the token, and tells Spring Security who the user is — without needing server-side sessions (stateless auth).
-4. Passwords are never stored in plain text — they're hashed with BCrypt before saving.
+1. On signup/login, the backend generates a signed JWT and returns it.
+2. The frontend stores the token in `localStorage` and attaches it to every request via an axios interceptor.
+3. `JwtAuthFilter` validates the token on each request and tells Spring Security who the user is — stateless, no server-side sessions.
+4. Passwords are hashed with BCrypt before storage.
 
 ## Known simplifications (worth understanding, not hiding)
-- No refresh tokens — JWT just expires after 24h and the user re-logs in. A real production app would add refresh tokens.
-- `userId` on `JobApplication` is a plain foreign key, not a full JPA `@ManyToOne` relationship — kept simple on purpose, but you should be able to explain what a `@ManyToOne` version would look like if asked.
-- No pagination on the applications list — fine at small scale, but worth mentioning as a next step if asked "how would you scale this?"
+- No refresh tokens — JWT expires after 24h, user re-logs in.
+- `userId` on `JobApplication` is a plain foreign key rather than a full JPA `@ManyToOne` relationship.
+- The stats pie chart reflects the current page of results, not the full history, since the dashboard paginates. A dedicated `/api/applications/stats` endpoint with a `COUNT... GROUP BY status` query would be the production fix.
+- Reminder emails use plain-text `SimpleMailMessage` rather than HTML templates.
 
-## Suggested next features (good talking points once built)
-- Filter/search applications by status or company
-- Email reminders for follow-ups
-- Export to CSV
-- Pagination once the list grows
+## Possible next features
+- Sort applications by date/company
+- Bulk actions (mark multiple as rejected, etc.)
+- Dark mode
+- Refresh tokens
