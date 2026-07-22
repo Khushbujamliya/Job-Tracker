@@ -1,26 +1,40 @@
 import { useEffect, useState } from 'react'
-import api from '../api/axios'
+import api, { fetchApplications, downloadCsv } from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import ApplicationForm from '../components/ApplicationForm'
 import ApplicationList from '../components/ApplicationList'
 import StatsPanel from '../components/StatsPanel'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
+
   const [applications, setApplications] = useState([])
-  const [editing, setEditing] = useState(null) // holds the application being edited, or null
+  const [totalPages, setTotalPages] = useState(0)
+  const [page, setPage] = useState(0)
+
+  const [status, setStatus] = useState('')
+  const [company, setCompany] = useState('')
+
+  const [editing, setEditing] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchApplications()
-  }, [])
+    const timeout = setTimeout(() => {
+      loadApplications()
+    }, 300)
+    return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, status, company])
 
-  async function fetchApplications() {
+  async function loadApplications() {
     setLoading(true)
     try {
-      const res = await api.get('/applications')
-      setApplications(res.data)
+      const data = await fetchApplications({ status, company, page, size: 10 })
+      setApplications(data.content)
+      setTotalPages(data.totalPages)
     } catch (err) {
       console.error('Failed to load applications', err)
     } finally {
@@ -28,21 +42,30 @@ export default function Dashboard() {
     }
   }
 
+  function handleStatusChange(value) {
+    setStatus(value)
+    setPage(0)
+  }
+
+  function handleCompanyChange(value) {
+    setCompany(value)
+    setPage(0)
+  }
+
   async function handleAddOrUpdate(data) {
     if (editing) {
-      const res = await api.put(`/applications/${editing.id}`, data)
-      setApplications((prev) => prev.map((a) => (a.id === editing.id ? res.data : a)))
+      await api.put(`/applications/${editing.id}`, data)
       setEditing(null)
     } else {
-      const res = await api.post('/applications', data)
-      setApplications((prev) => [...prev, res.data])
+      await api.post('/applications', data)
     }
     setShowForm(false)
+    loadApplications()
   }
 
   async function handleDelete(id) {
     await api.delete(`/applications/${id}`)
-    setApplications((prev) => prev.filter((a) => a.id !== id))
+    loadApplications()
   }
 
   function handleEdit(app) {
@@ -63,6 +86,14 @@ export default function Dashboard() {
 
         <StatsPanel applications={applications} />
 
+        <FilterBar
+          status={status}
+          company={company}
+          onStatusChange={handleStatusChange}
+          onCompanyChange={handleCompanyChange}
+          onExport={downloadCsv}
+        />
+
         {showForm ? (
           <ApplicationForm
             existing={editing}
@@ -81,7 +112,10 @@ export default function Dashboard() {
         {loading ? (
           <p className="text-gray-500">Loading...</p>
         ) : (
-          <ApplicationList applications={applications} onEdit={handleEdit} onDelete={handleDelete} />
+          <>
+            <ApplicationList applications={applications} onEdit={handleEdit} onDelete={handleDelete} />
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
         )}
       </div>
     </div>
